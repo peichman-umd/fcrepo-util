@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# if you provide any arguments, these are passed on to curl
+
+if [ $# -gt 0 ]; then
+    curl -s -H 'Accept: application/n-triples' "$@" | ./ldp-contains
+else
+    ./ldp-contains
+fi

@@ -1,0 +1,10 @@
+#!/usr/bin/awk -f
+
+# to get a file to process using this script, first do:
+# $ curl -H 'Accept: application/n-triples' $URL
+
+$2 == "<http://www.w3.org/ns/ldp#contains>" {
+    # strip out the surrounding <> from the URI
+    gsub(/[<>]/, "", $3)
+    print $3
+}

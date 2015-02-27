@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# supply a URL list on STDIN
+while read URL; do
+    # check to see if it exists
+    RESPONSE=$(curl -Isw "%{http_code}\n" -o /dev/null "$@" "$URL")
+    if [ "$RESPONSE" != "410" ]; then
+        curl -X DELETE "$@" "$URL"
+    fi
+done

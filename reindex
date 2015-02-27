@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# usage: reindex [base-URI-to-reindex] [JMS-service-URI]
+
+BASE_URI=${1:-http://localhost:8080/rest/}
+JMS_URI=${2:-http://localhost:9090}
+
+curl -X POST -d baseURI="$BASE_URI" "$JMS_URI/reindex"

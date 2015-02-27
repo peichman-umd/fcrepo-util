@@ -1,0 +1,9 @@
+#!/bin/bash
+# based on:
+# https://wiki.apache.org/solr/FAQ#How_can_I_delete_all_documents_from_my_index.3F
+
+SOLR_URL=${1:-http://localhost:8983/solr}
+CT_XML='Content-type:text/xml; charset=utf-8'
+
+curl "$SOLR_URL/update" --data '<delete><query>*:*</query></delete>' -H "$CT_XML"
+curl "$SOLR_URL/update" --data '<commit/>' -H "$CT_XML"
