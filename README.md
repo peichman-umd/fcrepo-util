@@ -23,3 +23,7 @@ are the objects of ldp:contains statements.
 
 Request a reindexing of the repository content via the JMS message
 consumer service.
+
+## setaccessroles
+
+Create or update the RBACL list for a URL in Fedora.

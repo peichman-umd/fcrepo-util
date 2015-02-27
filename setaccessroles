@@ -1,0 +1,47 @@
+#!/usr/bin/perl -w
+use strict;
+
+use Getopt::Long;
+use LWP::UserAgent;
+use HTTP::Request;
+use JSON;
+use Term::ReadKey;
+
+GetOptions(
+    'D=s' => \my %PRINCIPALS,
+    'u=s' => \my $CREDENTIALS,
+);
+my $URI = shift;
+
+die "Usage: $0 -D principal=role,role [-u user:password] URI\n" unless %PRINCIPALS && $URI;
+
+my $ua = LWP::UserAgent->new;
+
+my $json_acl = encode_json(
+    { map { $_ => [ split /,/, $PRINCIPALS{$_} ] } keys %PRINCIPALS }
+);
+
+my $req = HTTP::Request->new(POST => "$URI/fcr:accessroles");
+$req->content_type('application/json');
+$req->content($json_acl);
+$req->authorization_basic(split /:/, $CREDENTIALS) if $CREDENTIALS;
+
+my $authorized = 1;
+do {
+    my $res = $ua->request($req);
+    print $res->status_line, "\n";
+
+    if ($res->code == 401) {
+        $authorized = 0;
+        print "Username: ";
+        chomp(my $username = <STDIN>);
+        print "Password: ";
+        ReadMode('noecho');
+        chomp(my $password = <STDIN>);
+        ReadMode(0);
+        print "\n";
+        $req->authorization_basic($username, $password);
+    } else {
+        $authorized = 1;
+    }
+} while (not $authorized)
