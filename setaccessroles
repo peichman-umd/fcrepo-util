@@ -33,6 +33,7 @@ do {
 
     if ($res->code == 401) {
         $authorized = 0;
+        print $res->header('WWW-Authenticate') . "\n";
         print "Username: ";
         chomp(my $username = <STDIN>);
         print "Password: ";
