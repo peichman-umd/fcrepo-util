@@ -2,10 +2,8 @@
 use strict;
 
 use Getopt::Long;
-use LWP::UserAgent;
 use HTTP::Request;
 use JSON;
-use Term::ReadKey;
 
 GetOptions(
     'D=s' => \my %PRINCIPALS,
@@ -15,7 +13,7 @@ my $URI = shift;
 
 die "Usage: $0 -D principal=role,role [-u user:password] URI\n" unless %PRINCIPALS && $URI;
 
-my $ua = LWP::UserAgent->new;
+my $ua = LWP::UserAgent::InteractiveAuth->new;
 
 my $json_acl = encode_json(
     { map { $_ => [ split /,/, $PRINCIPALS{$_} ] } keys %PRINCIPALS }
@@ -26,23 +24,28 @@ $req->content_type('application/json');
 $req->content($json_acl);
 $req->authorization_basic(split /:/, $CREDENTIALS) if $CREDENTIALS;
 
-my $authorized = 1;
-do {
-    my $res = $ua->request($req);
-    print $res->status_line, "\n";
+my $res = $ua->request($req);
+print $res->status_line, "\n";
 
-    if ($res->code == 401) {
-        $authorized = 0;
-        print $res->header('WWW-Authenticate') . "\n";
-        print "Username: ";
-        chomp(my $username = <STDIN>);
-        print "Password: ";
-        ReadMode('noecho');
-        chomp(my $password = <STDIN>);
-        ReadMode(0);
-        print "\n";
-        $req->authorization_basic($username, $password);
-    } else {
-        $authorized = 1;
-    }
-} while (not $authorized)
+package LWP::UserAgent::InteractiveAuth;
+
+use base qw{LWP::UserAgent};
+
+use Term::ReadKey;
+
+sub get_basic_credentials {
+    my ($self, $realm, $uri, $is_proxy) = @_;
+
+    print "Authorization required for $uri (Realm=$realm)\n";
+
+    print "Username: ";
+    chomp(my $username = <STDIN>);
+
+    print "Password: ";
+    ReadMode('noecho');
+    chomp(my $password = <STDIN>);
+    ReadMode(0);
+    print "\n";
+
+    return ($username, $password);
+}
